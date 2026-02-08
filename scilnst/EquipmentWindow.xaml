@@ -1,0 +1,150 @@
+﻿<Window x:Class="scilnst.EquipmentWindow"
+       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Оборудование научного института" 
+        xmlns:local="clr-namespace:scilnst"
+        Height="700" 
+        Width="900"
+        WindowStartupLocation="CenterScreen"
+        Closed="Window_Closed"
+        Background="#f5f5f5">
+
+    <Window.Resources>
+        <Style TargetType="Border">
+            <Setter Property="CornerRadius" Value="5"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Height" Value="30"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Content="Выход"
+                    Click="ExitButton_Click"
+                    Background="#e74c3c"
+                    Foreground="White"
+                    Padding="15,5"
+                    FontWeight="Bold"
+                    Cursor="Hand"/>
+
+            <TextBlock Grid.Column="1"
+                   x:Name="txtEquipmentCount"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="#7f8c8d"/>   
+
+            <TextBlock Grid.Column="2"
+                       x:Name="txtUserInfo"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Foreground="#2c3e50"/>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ListView x:Name="lvEquipment" 
+                          Background="Transparent"
+                          BorderThickness="0">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" 
+                                    BorderBrush="#ddd" 
+                                    BorderThickness="1"
+                                    Margin="0,5"
+                                    Padding="10"
+                                    CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" 
+                                            Width="140" 
+                                            Height="140"
+                                            Background="#f8f9fa"
+                                            CornerRadius="5">
+                                        <Image Source="{Binding Photo}"
+                                               Stretch="Uniform"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"/>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Margin="15,0">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   FontSize="16"
+                                                   Foreground="#2c3e50"
+                                                   Margin="0,0,0,5"/>
+
+                                        <TextBlock Text="{Binding Description}" 
+                                                   TextWrapping="Wrap"
+                                                   Foreground="#34495e"
+                                                   Margin="0,0,0,10"/>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="Инв. №: "/>
+                                            <TextBlock Text="{Binding InventoryNumber}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="Вес: "/>
+                                            <TextBlock Text="{Binding Weight, StringFormat={}{0} кг}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="Дата регистрации: "/>
+                                            <TextBlock Text="{Binding RegistrationDate, StringFormat=dd.MM.yyyy}"/>
+                                        </StackPanel>
+
+                                        <Border
+                                                Background="{Binding StatusColor}" 
+                                                Padding="10"
+                                                CornerRadius="5"
+                                                Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding StatusText}" 
+                                                       HorizontalAlignment="Center"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Аудитория: "/>
+                                            <TextBlock Text="{Binding Room}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Отдел: "/>
+                                            <TextBlock Text="{Binding Department}"
+                                                               TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>
