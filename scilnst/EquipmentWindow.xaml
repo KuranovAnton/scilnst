@@ -1,23 +1,16 @@
 ﻿<Window x:Class="scilnst.EquipmentWindow"
-       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Оборудование научного института" 
         xmlns:local="clr-namespace:scilnst"
-        Height="700" 
+        Title="Окно просмотра оборудования" 
+        Height="650" 
         Width="900"
         WindowStartupLocation="CenterScreen"
         Closed="Window_Closed"
-        Background="#f5f5f5">
+        FontFamily="Times New Roman">
 
     <Window.Resources>
-        <Style TargetType="Border">
-            <Setter Property="CornerRadius" Value="5"/>
-        </Style>
-
-        <Style TargetType="TextBox">
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
     <Grid Margin="10">
@@ -25,126 +18,134 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Left">
+            <Button Content="← На главную"
+                    Click="ExitButton"
+                    Padding="10,5"
+                    Margin="0,0,10,0"/>
 
-            <Button Grid.Column="0"
-                    Content="Выход"
-                    Click="ExitButton_Click"
-                    Background="#e74c3c"
+            <Button Content="➕ Добавить"
+                    Click="AddEquipmentButton"
+                    Padding="10,5"
+                    Background="#4CAF50"
                     Foreground="White"
-                    Padding="15,5"
-                    FontWeight="Bold"
-                    Cursor="Hand"/>
+                    Visibility="{Binding CanAddEdit, Converter={StaticResource BoolToVis}}"/>
 
-            <TextBlock Grid.Column="1"
-                   x:Name="txtEquipmentCount"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Foreground="#7f8c8d"/>   
-
-            <TextBlock Grid.Column="2"
-                       x:Name="txtUserInfo"
-                       HorizontalAlignment="Right"
+            <TextBlock x:Name="txtUserInfo"
                        VerticalAlignment="Center"
-                       FontSize="14"
-                       FontWeight="Bold"
-                       Foreground="#2c3e50"/>
-        </Grid>
+                       Margin="20,0,0,0"
+                       FontWeight="SemiBold"/>
+        </StackPanel>
 
-        <Grid Grid.Row="2">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ListView x:Name="lvEquipment" 
-                          Background="Transparent"
-                          BorderThickness="0">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="White" 
-                                    BorderBrush="#ddd" 
-                                    BorderThickness="1"
-                                    Margin="0,5"
-                                    Padding="10"
-                                    CornerRadius="8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="150"/>
-                                    </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    Margin="0,0,0,15"
+                    Visibility="{Binding CanUseFilters, Converter={StaticResource BoolToVis}}">
 
-                                    <Border Grid.Column="0" 
-                                            Width="140" 
-                                            Height="140"
-                                            Background="#f8f9fa"
-                                            CornerRadius="5">
-                                        <Image Source="{Binding Photo}"
-                                               Stretch="Uniform"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Center"/>
-                                    </Border>
+            <TextBox x:Name="txtSearch" 
+                     TextChanged="txtSearch_TextChanged"
+                     Width="250"
+                     Height="30"
+                     Padding="5"
+                     Margin="0,0,10,0"
+                     ToolTip="Поиск"/>
 
-                                    <StackPanel Grid.Column="1" Margin="15,0">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   FontSize="16"
-                                                   Foreground="#2c3e50"
-                                                   Margin="0,0,0,5"/>
+            <ComboBox x:Name="cmbDepartmentFilter" 
+                      SelectionChanged="cmbDepartmentFilter_SelectionChanged"
+                      Width="200"
+                      Height="30"
+                      Margin="0,0,10,0"
+                      DisplayMemberPath="DisplayName"/>
 
-                                        <TextBlock Text="{Binding Description}" 
-                                                   TextWrapping="Wrap"
-                                                   Foreground="#34495e"
-                                                   Margin="0,0,0,10"/>
+            <ComboBox x:Name="cmbSortOrder" 
+                      SelectionChanged="cmbSortOrder_SelectionChanged"
+                      Width="150"
+                      Height="30">
+                <ComboBoxItem Tag="None">Без сортировки</ComboBoxItem>
+                <ComboBoxItem Tag="Ascending">Вес ↑</ComboBoxItem>
+                <ComboBoxItem Tag="Descending">Вес ↓</ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="Инв. №: "/>
-                                            <TextBlock Text="{Binding InventoryNumber}"/>
-                                        </StackPanel>
+        <ScrollViewer Grid.Row="2" 
+                      VerticalScrollBarVisibility="Auto">
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="Вес: "/>
-                                            <TextBlock Text="{Binding Weight, StringFormat={}{0} кг}"/>
-                                        </StackPanel>
+            <ListView x:Name="lvEquipment"
+                      MouseDoubleClick="lvEquipment_MouseDoubleClick">
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="Дата регистрации: "/>
-                                            <TextBlock Text="{Binding RegistrationDate, StringFormat=dd.MM.yyyy}"/>
-                                        </StackPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#CCCCCC" 
+                                BorderThickness="1" 
+                                CornerRadius="5" 
+                                Padding="10" 
+                                Margin="0,0,0,10"
+                                Background="White">
 
-                                        <Border
-                                                Background="{Binding StatusColor}" 
-                                                Padding="10"
-                                                CornerRadius="5"
-                                                Margin="0,0,0,10">
-                                            <TextBlock Text="{Binding StatusText}" 
-                                                       HorizontalAlignment="Center"
-                                                       FontWeight="Bold"
-                                                       Foreground="White"
-                                                       TextWrapping="Wrap"/>
-                                        </Border>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Аудитория: "/>
-                                            <TextBlock Text="{Binding Room}"/>
-                                        </StackPanel>
+                                <Border Grid.Column="0" 
+                                        BorderBrush="#DDDDDD" 
+                                        BorderThickness="1" 
+                                        CornerRadius="3"
+                                        Width="100" 
+                                        Height="100">
+                                    <Image Source="{Binding PhotoImage, FallbackValue=/Images/stub.jpg, TargetNullValue=/Images/stub.jpg}"
+                                           Stretch="Uniform"/>
+                                </Border>
 
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Отдел: "/>
-                                            <TextBlock Text="{Binding Department}"
-                                                               TextWrapping="Wrap"/>
-                                        </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="5,0">
+                                    <TextBlock Text="{Binding Name}"  
+                                               FontWeight="Bold" 
+                                               FontSize="14"
+                                               Margin="0,0,0,5"/>
+
+                                    <TextBlock Text="{Binding Description}" 
+                                               Margin="0,0,0,5"
+                                               TextWrapping="Wrap"/>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="{Binding InventoryNumber}" 
+                                                   Foreground="Gray"
+                                                   Margin="0,0,15,0"/>
+                                        <TextBlock Text="{Binding Weight, StringFormat=Вес: {0} кг}" 
+                                                   Foreground="Gray"/>
                                     </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </ScrollViewer>
-        </Grid>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="{Binding Department}" 
+                                                   Foreground="Blue"
+                                                   Margin="0,0,15,0"
+                                                   Visibility="{Binding HasDepartment, Converter={StaticResource BoolToVis}}"/>
+                                        <TextBlock Text="{Binding Room}" 
+                                                   Foreground="Blue"
+                                                   Visibility="{Binding HasRoom, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+
+                                    <Border Background="{Binding StatusColor}" 
+                                            Padding="5,2"
+                                            CornerRadius="3"
+                                            HorizontalAlignment="Left"
+                                            Visibility="{Binding DataContext.CanSeeStatus, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding StatusText}" 
+                                                   Foreground="White"
+                                                   FontSize="11"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </ScrollViewer>
     </Grid>
 </Window>
