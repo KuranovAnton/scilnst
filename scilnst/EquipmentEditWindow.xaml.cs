@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using scilnst.Data;
 using scilnst.Models;
@@ -37,6 +37,11 @@ namespace scilnst
         private List<Department> _departments;
         private List<Room> _rooms;
 
+        private const int REQUIRED_WIDTH = 300;
+        private const int REQUIRED_HEIGHT = 200;
+        private const string REQUIRED_DIMENSIONS_MESSAGE = "Фото должно быть размером 300x200 пикселей.";
+        private const long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public EquipmentEditWindow(Equipment? equipment, SciInstContext context, CurrentUser user)
@@ -51,6 +56,7 @@ namespace scilnst
 
             InitializeWindow();
         }
+        
         private void InitializeWindow()
         {
             DataContext = this;
@@ -358,9 +364,6 @@ namespace scilnst
             return new Room { RoomId = 0, RoomNumber = "Не выбрано" };
         }
 
-        
-
-
         private void UpdatePhotoImage(string? photoPath)
         {
             if (!string.IsNullOrEmpty(photoPath) && File.Exists(photoPath))
@@ -370,6 +373,46 @@ namespace scilnst
             else
             {
                 PhotoImage = ImageHelper.LoadStubImage();
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, соответствует ли изображение требуемым размерам
+        /// </summary>
+        private bool ValidateImageDimensions(string imagePath, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            try
+            {
+                var fileInfo = new FileInfo(imagePath);
+                if (fileInfo.Length > MAX_FILE_SIZE)
+                {
+                    errorMessage = $"Размер файла превышает {MAX_FILE_SIZE / 1024 / 1024} МБ. Пожалуйста, выберите файл меньшего размера.";
+                    return false;
+                }
+
+                using (var fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                {
+                    var decoder = BitmapDecoder.Create(fileStream, BitmapCreateOptions.IgnoreImageCache, BitmapCacheOption.None);
+                    var frame = decoder.Frames[0];
+                    
+                    int width = frame.PixelWidth;
+                    int height = frame.PixelHeight;
+
+                    if (width != REQUIRED_WIDTH || height != REQUIRED_HEIGHT)
+                    {
+                        errorMessage = $"Фото должно быть размером {REQUIRED_WIDTH}x{REQUIRED_HEIGHT} пикселей. Текущий размер: {width}x{height} пикселей.";
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Ошибка при проверке изображения: {ex.Message}";
+                return false;
             }
         }
 
@@ -384,6 +427,13 @@ namespace scilnst
 
             if (openFileDialog.ShowDialog() == true)
             {
+                if (!ValidateImageDimensions(openFileDialog.FileName, out string validationError))
+                {
+                    MessageBox.Show(validationError, "Ошибка валидации", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 ProcessSelectedPhoto(openFileDialog.FileName);
             }
         }
@@ -393,7 +443,7 @@ namespace scilnst
             return new OpenFileDialog
             {
                 Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp",
-                Title = "Выберите фото"
+                Title = "Выберите фото (требуемый размер: 300x200 px)"
             };
         }
 
@@ -439,9 +489,6 @@ namespace scilnst
             PhotoPath = null;
             _hasChanges = true;
         }
-
-        
-
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
@@ -496,6 +543,20 @@ namespace scilnst
             {
                 MessageBox.Show("Выберите подразделение.");
                 return false;
+            }
+
+            if (!string.IsNullOrEmpty(_originalPhotoPath))
+            {
+                var fullPhotoPath = Path.Combine(Directory.GetCurrentDirectory(), "Images", _originalPhotoPath);
+                if (File.Exists(fullPhotoPath))
+                {
+                    if (!ValidateImageDimensions(fullPhotoPath, out string validationError))
+                    {
+                        MessageBox.Show($"Ошибка валидации фото: {validationError}", 
+                            "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return false;
+                    }
+                }
             }
 
             return true;
@@ -595,9 +656,6 @@ namespace scilnst
             return $"Ошибка при сохранении в базу данных:\n{innerMessage}";
         }
 
-        
-
-
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (!CanDelete || _isNewEquipment)
@@ -632,7 +690,6 @@ namespace scilnst
                 ShowErrorMessage("Ошибка при удалении", exception);
             }
         }
-
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -689,7 +746,5 @@ namespace scilnst
             MessageBox.Show($"{message}: {exception.Message}",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-
-        
     }
 }
